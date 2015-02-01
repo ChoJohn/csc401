@@ -6,6 +6,7 @@ and tagged tweet file
 
 import os
 import sys
+import re
 
 from argparse import ArgumentParser
 
@@ -21,7 +22,10 @@ to be printed.
 def parse(line):
     # Preprocess
     line = remove_html(line)
-
+    line = to_ascii(line)
+    # Tokenize
+    tokens = line.strip().split(' ')
+    
 """
 Remove all html tags (i.e. anyting between < and >)
 """
@@ -40,6 +44,38 @@ def remove_html(line):
             continue
         # Otherwise cut the part in the middle
         line = line[:a] + line[b+1:]
+"""
+Take a list of tokens, return a list of lists representing
+the sentences in the tweet.
+"""
+def to_sentences(tokens):
+    pass
+
+
+"""
+Remove all tokens that look like a url, remove hashtags
+and @ from the beginning of tokens
+"""
+def remove_hash_url(tokens):
+    new_tokens = []
+    for token in tokens:
+        # Look for website match
+        if re.match(r'(www|http).*', token) or re.match(r'.*\.(com|net|org|edu|ca)/.*', token):
+            continue
+        if (token.startswith('#') or token.startswith('@')) and len(token) > 1:
+            new_tokens.append(token[1:])
+        else:
+            new_tokens.append(token)
+    return new_tokens
+
+"""
+Replace &,<,> with ascii equivalent
+"""
+def to_ascii(line):
+    line = line.replace('&amp;gt;', '>')
+    line = line.replace('&amp;lt;', '<')
+    line = line.replace('&amp;', '&')
+    line = line.replace('quot;', '"')
 
 def script(input, output):
     with open(input) as file:
