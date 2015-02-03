@@ -8,18 +8,25 @@ import sys
 
 __author__ = 'Tal Friedman (talf301@gmail.com)'
 
+def count_sat(tweet, f):
+    """
+    Generic method which counts how many token/tag
+    pairs satisfies the two-place function f.
+    """
+    count = 0
+    for line in tweet:
+        for token, tag in line:
+            if f(token, tag):
+                count += 1
+    return count
+
 def count_token_tag(tweet, wordlist, taglist):
     """
     Generic method for computing features 
     which involve a count of the number of 
     tokens/tag pairs both in correspondoning lists.
     """
-    count = 0
-    for line in tweet:
-        for token, tag in line:
-            if token in wordlist and tag in taglist:
-                count += 1
-    return count
+    return count_sat(tweet, lambda x,y: x in wordlist and y in taglist)
 
 def count_token(tweet, wordlist):
     """
@@ -29,13 +36,8 @@ def count_token(tweet, wordlist):
     Assumption is that tweets come as a list (entire tweet)
     of lists (sentences) of pairs (token,tag)
     """
-    count = 0
-    for line in tweet:
-        for token, _ in line:
-            if token in wordlist:
-                count += 1
-    return count
-
+    return count_sat(tweet, lambda x,y: x in wordlist)
+    
 def count_tag(tweet, worldlist):
     """
     Generic method for computing features
@@ -44,13 +46,8 @@ def count_tag(tweet, worldlist):
     Assumption is that tweets come as a list (entire tweet)
     of lists (sentences) of pairs (token,tag)
     """
-    count = 0
-    for line in tweet:
-        for _ , tag in line:
-            if tag in wordlist:
-                count += 1
-    return count
-
+    return count_sat(tweet, lambda x,y: y in wordlist)
+    
 def av_sen_len(tweet):
     """
     Returns the average length of the sentneces in tokens.
@@ -77,13 +74,33 @@ def num_sen(tweet):
     return len(tweet)
 
 def load_wordlist(filename):
-	"""
-	Load a list of words, one per line, from a given
-	filename.
-	"""
-	with open(filename, 'rU') as file:
-		wordlist = [line.strip() for line in file]
-	return wordlist
+    """
+    Load a list of words, one per line, from a given
+    filename.
+    """
+    with open(filename, 'rU') as file:
+            wordlist = [line.strip() for line in file]
+    return wordlist
+
+def count_future_tense(tweet):
+    """
+    Count the number of instances of future tense verbs
+    in a tweet, as described by the forms:
+    "'ll", "will", "gonna", or triples in the form 
+    "going" "to" "_/VB"
+    """
+    # First count the simple cases
+    count = count_token(tweet, ["'ll", 'will', 'gonna'])
+    # Count the triples
+    for line in tweet:
+        if len(line) < 3: continue
+        for i in range(len(line)-2):
+            # Hard coded because making this modular seems
+            # like an unnecessary amount of work
+            if line[i][0] == 'going' and line[i+1][0] == 'to' \
+                    and line[i+2][1] == 'VB':
+                count += 1
+    return count         
 
 def build_line(tweet, class_label, fp_list, sp_list, tp_list, slang_list):
     """
@@ -91,8 +108,50 @@ def build_line(tweet, class_label, fp_list, sp_list, tp_list, slang_list):
     class label and whatever wordlists we need, and returns
     the line to be written to arff file.
     """
-	features = []
-    
+    features = []
+    # First person pronouns
+    features.append(count_token_tag(tweet, fp_list, ['PRP', 'PRP$']))
+    # Second perosn pronouns
+    features.append(count_token_tag(tweet, sp_list, ['PRP', 'PRP$']))
+    # Third person pronouns
+    features.append(count_token_tag(tweet, tp_list, ['PRP', 'PRP$']))
+    # Coordinating conjunctions
+    features.append(count_tag(tweet, ['CC']))
+    # Past tense verbs
+    features.append(count_tag(tweet, ['VBD']))
+    # Future tense verbs
+    features.append(count_future_tense(tweet))
+    # Commas
+    features.append(count_tag(tweet, [',']))
+    # Colons/semicolons
+    features.append(count_token(tweet, [';', ':']))
+    # Ellipses
+    features.append(count_token(tweet, ['...']))
+    # Common nouns
+    features.append(count_tag(tweet, ['NN', 'NNS']))
+    # Proper nouns
+    features.append(count_tag(tweet, ['NNP', 'NNPS']))
+    # Adverbs
+    features.append(count_tag(tweet, ['RB', 'RBR', 'RBS']))
+    # wh-words
+    features.append(count_tag(tweet, ['WDT', 'WP', 'WP$', 'WRB']))
+    # Slang
+    features.append(count_token(tweet, slang_list))
+    # All upper
+    features.append(count_sat(tweet, lambda x,y: len(x) > 1 and x.isupper()))
+    # Average sentence length
+    features.append(av_sen_len(tweet))
+    # Average token length
+    features.append(av_token_len(tweet))
+    # Number of sentences
+    features.append(num_sen(tweet))
+
+    # EXTRA FEATURES HERE
+
+    # Class label
+    features.append(class_label)
+    return ','.join(features)+'\n'
+
 def main(args=sys.argv[1:]):
     # Get if we need to use the first X tweets
     num_tweets = 0
@@ -102,10 +161,10 @@ def main(args=sys.argv[1:]):
     classes = []
 
     # Load in required wordlists
-	fp_list = load_wordlist('/u/cs401/Wordlists/First-person')
-	sp_list = load_wordlist('/u/cs401/Wordlists/Second-person')
-	tp_list = load_wordlist('/u/cs401/Wordlists/Third-person')
-	slang_list = load_wordlist('/u/cs401/Wordlists/Slang')
+    fp_list = load_wordlist('/u/cs401/Wordlists/First-person')
+    sp_list = load_wordlist('/u/cs401/Wordlists/Second-person')
+    tp_list = load_wordlist('/u/cs401/Wordlists/Third-person')
+    slang_list = load_wordlist('/u/cs401/Wordlists/Slang')
     # Compile a list of lists for classes, first entry is name,
     # the rest are file names to draw from
     for raw_class in args[:-1]:
@@ -140,7 +199,8 @@ def main(args=sys.argv[1:]):
             curr_tweet = []
             for line in file:
                 if line.strip() == '|':
-                    build_line(curr_tweet, c[0], fp_list, sp_list, tp_list, slang_list)
+                    to_write = build_line(curr_tweet, c[0], fp_list, sp_list, tp_list, slang_list)
+                    out_file.write(to_write)
                     curr_tweet = []
                 else:
                     pairs = line.strip().split()
