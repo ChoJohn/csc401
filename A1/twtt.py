@@ -132,7 +132,7 @@ def to_sentences(tokens, abbrevs):
             token = token[:-1]
         # First handle ellipsis: we consider it EOS if following letter is uppercase
         if token.find('..') > -1:
-            ind = token.find('..')
+            ind = token.find('...')
             if token[:ind]:
                 curr_sen.append(token[:ind])
             curr_sen.append(token[ind:])
