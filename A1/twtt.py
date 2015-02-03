@@ -16,20 +16,78 @@ __author__ = 'Tal Friedman (talf301@gmail.com)'
 
 """
 Overall pipeline, preprocesses tokenizes and 
-tags a single line and returns a list of lines
+tags a single tweet and returns a list of lines
 to be printed.
 """
-def parse(line):
+def parse(line, abbrevs, tagger):
     # Preprocess
     line = remove_html(line)
     line = to_ascii(line)
     # Tokenize
     tokens = line.strip().split(' ')
-    
-"""
-Remove all html tags (i.e. anyting between < and >)
-"""
+    sens = to_sentences(tokens, abbrevs)
+    sens = sep_punc(sens)
+    sens = split_clitic(sens)
+    lines = []
+    for sen in sens:
+        tags = tagger.tag(sen)
+        new_line = ' '.join(['/'.join(w,t) for w,t in zip(sen, tags)])
+        lines.append(new_line)
+    return lines
+
+def split_clitic(sens):
+    """
+    Simple heuristic for splitting up apostrophes:
+    -If last character, split it on its own
+    -If its second last and last is 's', take those 2
+    -If its the first character, leave it in the word
+    -Otherwise take 1 character before to end
+    """
+    new_sens = []
+    curr_sen = []
+    for sen in sens:
+        for token in sen:
+            if token.find("'") > -1:
+                ind = token.find("'")
+                if ind == len(token) - 1:
+                    curr_sen.append(token[:-1])
+                    curr_sen.append("'")
+                elif ind == len(token) - 2 and token.lower()[-1] == 's':
+                    curr_sen.append(token[:-2])
+                    curr_sen.append(token[-2:])
+                elif ind == 0:
+                    curr_sen.append(token)
+                else:
+                    curr_sen.append(token[:ind-1])
+                    curr_sen.append(token[ind-1:])
+            else:
+                curr_sen.append(token)
+        new_sens.append(curr_sen)
+        curr_sen = []
+    return new_sens
+
+def sep_punc(sens):
+    """
+    Separates non-quotation punctuation out into
+    separate tokens, and splits up clitics.
+    """
+    new_sens = []
+    curr_sen = []
+    for sen in sens:
+        for token in sen:
+            if token.endswith(':') or token.endswith(';') or token.endswith(','):
+                curr_sen.append(token[:-1])
+                curr_sen.append(token[-1])
+            else:
+                curr_sen.append(token)
+        new_sens.append(curr_sen)
+        curr_sen = []
+    return new_sens
+
 def remove_html(line):
+    """
+    Remove all html tags (i.e. anyting between < and >)
+    """
     last = len(line)
     while True:
         # Scan for open brace from left
@@ -44,23 +102,79 @@ def remove_html(line):
             continue
         # Otherwise cut the part in the middle
         line = line[:a] + line[b+1:]
-"""
-Take a list of tokens, return a list of lists representing
-the sentences in the tweet.
-"""
-def to_sentences(tokens):
-    pass
 
+def to_sentences(tokens, abbrevs):
+    """
+    Take a list of tokens, return a list of lists representing
+    the sentences in the tweet. The heuristic I use is roughly
+    what is found in Manning and Shutze 4.2.4, with some simplifications
+    (I don't consider different kinds of abbreviations, and I don't
+    use names in addition to lowercase for determining boundaries).
+    This function also separates out quotation marks.
+    """
+    new_tokens = []
+    curr_sen = []
+    for i,token in tokens:
+        # Deal with quotation marks
+        ends_quote = False
+        is_bound = False
+        if token.startswith('"'):
+            token = token[1:]
+            curr_sen.append('"')
+        if token.endswith('"'):
+            ends_quote = True
+            token = token[:-1]
+        # First handle ellipsis: we consider it EOS if following letter is uppercase
+        if token.find('..') > -1:
+            ind = token.find('..')
+            if token[:ind]:
+                curr_sen.append(token[:ind])
+            curr_sen.append(token[ind:])
+            # EOS case
+            if i+1 < len(tokens) and tokens[i+1][0].isupper():
+                is_bound = True   
+        # Periods considered EOS unless abbreviation followed by lowercase
+        elif token.find('.') > -1:
+            ind = token.find('.')
+            if token[:ind]:
+                curr_sen.append(token[:ind])
+            curr_sen.append(token[ind:])
+            # If it's not an abbreviation and followed by lowercase, split
+            if not (token[:ind+1] in abbrevs
+                    and i+1 < len(tokens) and not tokens[i+1][0].isupper()):
+                is_bound = True
+        # ?, ! considered EOS unless it is followed by a lowercase
+        elif token.find('?') > -1 or token.find('!') > -1:
+            if not token.find('?') > -1:
+                ind = token.find('!')
+            elif not token.find('!') > -1:
+                ind = token.find('?')
+            else:
+                ind = min(token.find('!'), token.find('?'))
+            if token[:ind]:
+                curr_sen.append(token[:ind])
+            curr_sen.append(token[ind:])
+            if i+1 < len(tokens) and tokens[i+1][0].isupper():
+                is_bound = True
+        else:
+            curr_sen.append(token)
+        if ends_quote:
+            curr_sen.append('"')
+        if is_bound:
+            new_tokens.append(curr_sen)
+            curr_sen = []
 
-"""
-Remove all tokens that look like a url, remove hashtags
-and @ from the beginning of tokens
-"""
+    return new_tokens
+
 def remove_hash_url(tokens):
+    """
+    Remove all tokens that look like a url, remove hashtags
+    and @ from the beginning of tokens
+    """
     new_tokens = []
     for token in tokens:
         # Look for website match
-        if re.match(r'(www|http).*', token) or re.match(r'.*\.(com|net|org|edu|ca)/.*', token):
+        if re.match(r'(www|http|Http).*', token) or re.match(r'.*\.(com|net|org|edu|ca)/.*', token):
             continue
         if (token.startswith('#') or token.startswith('@')) and len(token) > 1:
             new_tokens.append(token[1:])
@@ -68,25 +182,34 @@ def remove_hash_url(tokens):
             new_tokens.append(token)
     return new_tokens
 
-"""
-Replace &,<,> with ascii equivalent
-"""
 def to_ascii(line):
+    """
+    Replace &,<,>," with ascii equivalent
+    """
     line = line.replace('&amp;gt;', '>')
     line = line.replace('&amp;lt;', '<')
     line = line.replace('&amp;', '&')
     line = line.replace('quot;', '"')
 
 def script(input, output):
-    with open(input) as file:
+    abr_file = open('abbrev.english')
+    abbrevs = list(abr_file)
+    tagger = NLPlib.NLPlib()
+    outfile = open(output, 'w')
+    with open(input, 'rU') as file:
         for line in file:
-            out_line = parse(line)
+            print line
+            out_lines = parse(line, abbrevs, tagger)
+            for l in out_lines:
+                outfile.writeline(l)
+            outfile.writeline('|')
+    outfile.close()
 
 def parse_args(args):
     parser = ArgumentParser(description=__doc__.strip())
     
-    parser.add_argument('INPUT', help='Raw tweet input file')
-    parser.add_argument('OUTPUT', help='Output tokenized & tagged file')
+    parser.add_argument('input', help='Raw tweet input file')
+    parser.add_argument('output', help='Output tokenized & tagged file')
     return parser.parse_args(args)
 
 def main(args=sys.argv[1:]):
