@@ -43,6 +43,7 @@ def split_clitic(sens):
     -If last character, split it on its own
     -If its second last and last is 's', take those 2
     -If its the first character, leave it in the word
+    -If its third last and ending is "'ll", take that
     -Otherwise take 1 character before to end
     """
     new_sens = []
@@ -51,14 +52,17 @@ def split_clitic(sens):
         for token in sen:
             if token.find("'") > -1:
                 ind = token.find("'")
-                if ind == len(token) - 1:
+                if ind == 0:
+                    curr_sen.append(token)
+                elif ind == len(token) - 1:
                     curr_sen.append(token[:-1])
                     curr_sen.append("'")
                 elif ind == len(token) - 2 and token.lower()[-1] == 's':
                     curr_sen.append(token[:-2])
                     curr_sen.append(token[-2:])
-                elif ind == 0:
-                    curr_sen.append(token)
+                elif ind == len(token) - 3 and token.lower()[-2:] == 'll':
+                    curr_sen.append(token[:-3])
+                    curr_sen.append(token[-3:])
                 else:
                     curr_sen.append(token[:ind-1])
                     curr_sen.append(token[ind-1:])
