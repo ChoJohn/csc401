@@ -76,13 +76,22 @@ def num_sen(tweet):
     """
     return len(tweet)
 
-def build_line(tweet, class_label):
+def load_wordlist(filename):
+	"""
+	Load a list of words, one per line, from a given
+	filename.
+	"""
+	with open(filename, 'rU') as file:
+		wordlist = [line.strip() for line in file]
+	return wordlist
+
+def build_line(tweet, class_label, fp_list, sp_list, tp_list, slang_list):
     """
     Takes a tweet in our processed format along with a 
     class label and whatever wordlists we need, and returns
     the line to be written to arff file.
     """
-
+	features = []
     
 def main(args=sys.argv[1:]):
     # Get if we need to use the first X tweets
@@ -93,7 +102,10 @@ def main(args=sys.argv[1:]):
     classes = []
 
     # Load in required wordlists
-
+	fp_list = load_wordlist('/u/cs401/Wordlists/First-person')
+	sp_list = load_wordlist('/u/cs401/Wordlists/Second-person')
+	tp_list = load_wordlist('/u/cs401/Wordlists/Third-person')
+	slang_list = load_wordlist('/u/cs401/Wordlists/Slang')
     # Compile a list of lists for classes, first entry is name,
     # the rest are file names to draw from
     for raw_class in args[:-1]:
@@ -127,8 +139,8 @@ def main(args=sys.argv[1:]):
             file = open(filename, 'rU')
             curr_tweet = []
             for line in file:
-                if line.startswith('|'):
-                    build_line(curr_tweet, c[0])
+                if line.strip() == '|':
+                    build_line(curr_tweet, c[0], fp_list, sp_list, tp_list, slang_list)
                     curr_tweet = []
                 else:
                     pairs = line.strip().split()
