@@ -24,14 +24,16 @@ def parse(line, abbrevs, tagger):
     line = remove_html(line)
     line = to_ascii(line)
     # Tokenize
-    tokens = line.strip().split(' ')
+    tokens = line.strip().split()
+    tokens = remove_hash_url(tokens)
     sens = to_sentences(tokens, abbrevs)
+    print sens
     sens = sep_punc(sens)
     sens = split_clitic(sens)
     lines = []
     for sen in sens:
         tags = tagger.tag(sen)
-        new_line = ' '.join(['/'.join(w,t) for w,t in zip(sen, tags)])
+        new_line = ' '.join(['/'.join([w,t]) for w,t in zip(sen, tags)])
         lines.append(new_line)
     return lines
 
@@ -114,7 +116,7 @@ def to_sentences(tokens, abbrevs):
     """
     new_tokens = []
     curr_sen = []
-    for i,token in tokens:
+    for i,token in enumerate(tokens):
         # Deal with quotation marks
         ends_quote = False
         is_bound = False
@@ -163,6 +165,9 @@ def to_sentences(tokens, abbrevs):
         if is_bound:
             new_tokens.append(curr_sen)
             curr_sen = []
+    # If the current sentence is not empty, dump it
+    if curr_sen:
+        new_tokens.append(curr_sen)
 
     return new_tokens
 
@@ -174,7 +179,8 @@ def remove_hash_url(tokens):
     new_tokens = []
     for token in tokens:
         # Look for website match
-        if re.match(r'(www|http|Http).*', token) or re.match(r'.*\.(com|net|org|edu|ca)/.*', token):
+        if re.match(r'(www|http|Http).*', token) or re.match(r'.*\.(com|net|org|edu|ca)/.*', token) \
+                or re.match(r'youtu\.be/.*', token):
             continue
         if (token.startswith('#') or token.startswith('@')) and len(token) > 1:
             new_tokens.append(token[1:])
@@ -190,6 +196,7 @@ def to_ascii(line):
     line = line.replace('&amp;lt;', '<')
     line = line.replace('&amp;', '&')
     line = line.replace('quot;', '"')
+    return line
 
 def script(input, output):
     abr_file = open('abbrev.english')
@@ -198,11 +205,10 @@ def script(input, output):
     outfile = open(output, 'w')
     with open(input, 'rU') as file:
         for line in file:
-            print line
             out_lines = parse(line, abbrevs, tagger)
             for l in out_lines:
-                outfile.writeline(l)
-            outfile.writeline('|')
+                outfile.write(l+'\n')
+            outfile.write('|\n')
     outfile.close()
 
 def parse_args(args):
