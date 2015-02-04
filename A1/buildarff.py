@@ -1,10 +1,15 @@
 """
 Take tagged and tokenized tweets and build
 arff file from them containing 20 required features.
+NOTE: I have added a -L flag at the beginning, this
+indicates that the data should be log transformed (i.e
+each feature x becomes ln(x+1).
 """
 
 import os
 import sys
+
+import numpy as np
 
 __author__ = 'Tal Friedman (talf301@gmail.com)'
 
@@ -119,7 +124,7 @@ def count_future_tense(tweet):
                 count += 1
     return count         
 
-def build_line(tweet, class_label, fp_list, sp_list, tp_list, slang_list):
+def build_line(tweet, class_label, fp_list, sp_list, tp_list, slang_list, do_log):
     """
     Takes a tweet in our processed format along with a 
     class label and whatever wordlists we need, and returns
@@ -166,15 +171,28 @@ def build_line(tweet, class_label, fp_list, sp_list, tp_list, slang_list):
     features.append(av_token_len(tweet))
     # Number of sentences
     features.append(num_sen(tweet))
+
+    # If necessary, log transform features
+    if do_log:
+        features = np.array(features)
+        features = np.log(features+1)
+
     # To strings
     features = [str(f) for f in features]
-    # EXTRA FEATURES HERE
 
+    # EXTRA FEATURES HERE
+    
     # Class label
     features.append(class_label)
     return ','.join(features)+'\n'
 
 def main(args=sys.argv[1:]):
+    # Get if we need to log transform features before spitting them out
+    do_log = False
+    if args[0] == '-L':
+        do_log = True
+        args = args[1:]
+
     # Get if we need to use the first X tweets
     num_tweets = 0
     if args[0].startswith('-'):
@@ -222,7 +240,7 @@ def main(args=sys.argv[1:]):
             count = 0
             for line in file:
                 if line.strip() == '|':
-                    to_write = build_line(curr_tweet, c[0], fp_list, sp_list, tp_list, slang_list)
+                    to_write = build_line(curr_tweet, c[0], fp_list, sp_list, tp_list, slang_list, do_log)
                     out_file.write(to_write)
                     curr_tweet = []
                     # Update/check count
