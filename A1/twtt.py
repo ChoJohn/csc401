@@ -150,7 +150,7 @@ def to_sentences(tokens, abbrevs, pn_abbrevs, names):
             curr_sen.append(token[ind:])
             # If it's not an abbreviation and followed by lowercase, 
             # nor a personal abbreviation followed by a name, split
-            if not (token[:ind+1] in abbrevs
+            if not (token[:ind+1].lower() in abbrevs
                     and i+1 < len(tokens) and not tokens[i+1][0].isupper()
                     or token[:ind+1] in pn_abbrevs and i+1 < len(tokens)
                     and tokens[i+1].lower() in names):
