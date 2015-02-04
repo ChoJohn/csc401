@@ -81,7 +81,7 @@ def sep_punc(sens):
     curr_sen = []
     for sen in sens:
         for token in sen:
-            if token.beginswith("'") or token.beginswith('(') or token.beginswith('$'):
+            if token.startswith("'") or token.startswith('(') or token.startswith('$'):
                 if len(token) > 1: 
                     curr_sen.append(token[0])
                     token = token[1:]
