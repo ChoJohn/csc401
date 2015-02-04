@@ -26,7 +26,7 @@ def count_token_tag(tweet, wordlist, taglist):
     which involve a count of the number of 
     tokens/tag pairs both in correspondoning lists.
     """
-    return count_sat(tweet, lambda x,y: x in wordlist and y in taglist)
+    return count_sat(tweet, lambda x,y: x.lower() in wordlist and y in taglist)
 
 def count_token(tweet, wordlist):
     """
@@ -36,9 +36,9 @@ def count_token(tweet, wordlist):
     Assumption is that tweets come as a list (entire tweet)
     of lists (sentences) of pairs (token,tag)
     """
-    return count_sat(tweet, lambda x,y: x in wordlist)
+    return count_sat(tweet, lambda x,y: x.lower() in wordlist)
     
-def count_tag(tweet, wordlist):
+def count_tag(tweet, taglist):
     """
     Generic method for computing features
     which inolve a count of the number of tags
@@ -46,7 +46,7 @@ def count_tag(tweet, wordlist):
     Assumption is that tweets come as a list (entire tweet)
     of lists (sentences) of pairs (token,tag)
     """
-    return count_sat(tweet, lambda x,y: y in wordlist)
+    return count_sat(tweet, lambda x,y: y in taglist)
     
 def av_sen_len(tweet):
     """
@@ -83,7 +83,7 @@ def load_wordlist(filename):
     filename.
     """
     with open(filename, 'rU') as file:
-            wordlist = [line.strip() for line in file]
+            wordlist = [line.strip().lower() for line in file]
     return wordlist
 
 def count_future_tense(tweet):
