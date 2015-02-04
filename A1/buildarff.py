@@ -209,7 +209,8 @@ def main(args=sys.argv[1:]):
                     curr_tweet = []
                 else:
                     pairs = line.strip().split()
-                    curr_tweet.append([p.split('/') for p in pairs])
+                    # Only take the first 2 in case of something weird going on in parsing (e.g. uncaught URL)
+                    curr_tweet.append([p.split('/')[:2] for p in pairs])
 
 
 if __name__ == '__main__':
