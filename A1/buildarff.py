@@ -52,6 +52,7 @@ def av_sen_len(tweet):
     """
     Returns the average length of the sentneces in tokens.
     """
+    if len(tweet) == 0: return 0
     return sum(len(l) for l in tweet) / float(len(tweet))
 
 def av_token_len(tweet):
@@ -66,6 +67,9 @@ def av_token_len(tweet):
             if tag not in punc:
                 total_sum += len(token)
                 total_count += 1
+    if total_count == 0:
+        return 0
+    return total_sum / float(total_count)
 
 def num_sen(tweet):
     """
