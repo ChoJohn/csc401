@@ -19,14 +19,14 @@ Overall pipeline, preprocesses tokenizes and
 tags a single tweet and returns a list of lines
 to be printed.
 """
-def parse(line, abbrevs, tagger):
+def parse(line, abbrevs, pn_abbrevs, names, tagger):
     # Preprocess
     line = remove_html(line)
     line = to_ascii(line)
     # Tokenize
     tokens = line.strip().split()
     tokens = remove_hash_url(tokens)
-    sens = to_sentences(tokens, abbrevs)
+    sens = to_sentences(tokens, abbrevs, pn_abbrevs, names)
     print sens
     sens = sep_punc(sens)
     sens = split_clitic(sens)
@@ -75,13 +75,19 @@ def split_clitic(sens):
 def sep_punc(sens):
     """
     Separates non-quotation punctuation out into
-    separate tokens, and splits up clitics.
+    separate tokens.
     """
     new_sens = []
     curr_sen = []
     for sen in sens:
         for token in sen:
-            if token.endswith(':') or token.endswith(';') or token.endswith(','):
+            if token.beginswith("'") or token.beginswith('(') or token.beginswith('$'):
+                if len(token) > 1: 
+                    curr_sen.append(token[0])
+                    token = token[1:]
+
+            if token.endswith(':') or token.endswith(';') or token.endswith(',') \
+                or token.endswith("'") or token.endswith(')'):
                 curr_sen.append(token[:-1])
                 curr_sen.append(token[-1])
             else:
@@ -109,13 +115,11 @@ def remove_html(line):
         # Otherwise cut the part in the middle
         line = line[:a] + line[b+1:]
 
-def to_sentences(tokens, abbrevs):
+def to_sentences(tokens, abbrevs, pn_abbrevs, names):
     """
     Take a list of tokens, return a list of lists representing
     the sentences in the tweet. The heuristic I use is roughly
-    what is found in Manning and Shutze 4.2.4, with some simplifications
-    (I don't consider different kinds of abbreviations, and I don't
-    use names in addition to lowercase for determining boundaries).
+    what is found in Manning and Shutze 4.2.4.
     This function also separates out quotation marks.
     """
     new_tokens = []
@@ -145,9 +149,12 @@ def to_sentences(tokens, abbrevs):
             if token[:ind]:
                 curr_sen.append(token[:ind])
             curr_sen.append(token[ind:])
-            # If it's not an abbreviation and followed by lowercase, split
+            # If it's not an abbreviation and followed by lowercase, 
+            # nor a personal abbreviation followed by a name, split
             if not (token[:ind+1] in abbrevs
-                    and i+1 < len(tokens) and not tokens[i+1][0].isupper()):
+                    and i+1 < len(tokens) and not tokens[i+1][0].isupper()
+                    or token[:ind+1] in pn_abbrevs and i+1 < len(tokens)
+                    and tokens[i+1].lower() in names):
                 is_bound = True
         # ?, ! considered EOS unless it is followed by a lowercase
         elif token.find('?') > -1 or token.find('!') > -1:
@@ -203,17 +210,30 @@ def to_ascii(line):
     return line
 
 def script(input, output):
-    abr_file = open('abbrev.english')
-    abbrevs = list(abr_file)
+    abbrevs = load_wordlist('/u/cs401/Wordlist/abbrev.english')
+    male_names = load_wordlist('/u/cs401/Wordlist/maleFirstNames.txt')
+    female_names = load_wordlist('/u/cs401/Wordlist/femaleFirstNames.txt')
+    last_names = load_wordlist('/u/cs401/Wordlist/lastNames.txt')
+    pn_abbrevs = load_wordlist('/u/cs401/Wordlist/pn_abbrev.english')
+    names = male_names + female_names + last_names
     tagger = NLPlib.NLPlib()
     outfile = open(output, 'w')
     with open(input, 'rU') as file:
         for line in file:
-            out_lines = parse(line, abbrevs, tagger)
+            out_lines = parse(line, abbrevs, pn_abbrevs, names, tagger)
             for l in out_lines:
                 outfile.write(l+'\n')
             outfile.write('|\n')
     outfile.close()
+
+def load_wordlist(filename):
+    """
+    Load a list of words, one per line, from a given
+    filename.
+    """
+    with open(filename, 'rU') as file:
+            wordlist = [line.strip().lower() for line in file]
+    return wordlist
 
 def parse_args(args):
     parser = ArgumentParser(description=__doc__.strip())
