@@ -20,6 +20,19 @@ def count_sat(tweet, f):
                 count += 1
     return count
 
+def count_char(tweet, charlist):
+    """
+    Generic method which counts how many instances of
+    a specific character list occur in a tweet.
+    """
+    count = 0
+    for line in tweet:
+        for token, _ in line:
+            for char in token:
+                if char in charlist:
+                    count += 1
+    return count
+
 def count_token_tag(tweet, wordlist, taglist):
     """
     Generic method for computing features 
@@ -129,6 +142,10 @@ def build_line(tweet, class_label, fp_list, sp_list, tp_list, slang_list):
     features.append(count_tag(tweet, [',']))
     # Colons/semicolons
     features.append(count_token(tweet, [';', ':']))
+    # Dashes
+    features.append(count_char(tweet, ['-']))
+    # Parentheses
+    features.append(count_tag(tweet, ['(', ')']))
     # Ellipses
     features.append(count_token(tweet, ['...']))
     # Common nouns
