@@ -210,11 +210,11 @@ def to_ascii(line):
     return line
 
 def script(input, output):
-    abbrevs = load_wordlist('/u/cs401/Wordlist/abbrev.english')
-    male_names = load_wordlist('/u/cs401/Wordlist/maleFirstNames.txt')
-    female_names = load_wordlist('/u/cs401/Wordlist/femaleFirstNames.txt')
-    last_names = load_wordlist('/u/cs401/Wordlist/lastNames.txt')
-    pn_abbrevs = load_wordlist('/u/cs401/Wordlist/pn_abbrev.english')
+    abbrevs = load_wordlist('/u/cs401/Wordlists/abbrev.english')
+    male_names = load_wordlist('/u/cs401/Wordlists/maleFirstNames.txt')
+    female_names = load_wordlist('/u/cs401/Wordlists/femaleFirstNames.txt')
+    last_names = load_wordlist('/u/cs401/Wordlists/lastNames.txt')
+    pn_abbrevs = load_wordlist('/u/cs401/Wordlists/pn_abbrev.english')
     names = male_names + female_names + last_names
     tagger = NLPlib.NLPlib()
     outfile = open(output, 'w')
