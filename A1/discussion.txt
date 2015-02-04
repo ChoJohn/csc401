@@ -1,0 +1,14 @@
+------Section 3.1-------
+The commands I used to run these experiments were, for SVM, NB, and DT respectively:
+java -cp /u/cs401/WEKA/weka.jar weka.classifiers.functions.SMO -t part31.arff -x 10 -o
+java -cp /u/cs401/WEKA/weka.jar weka.classifiers.bayes.NaiveBayes -t part31.arff -x 10 -o
+java -cp /u/cs401/WEKA/weka.jar weka.classifiers.trees.J48 -t part31.arff -x 10 -o
+From running these 3 classifiers on the arff file I built, I found that the accuracies were as follows (on 10 fold cv):
+SVM: 50.76%
+NB: 43.80%
+DT: 46.08%
+So based on these results, the best classifier for this task is the support vector machine.
+------Section 3.2-------
+The commands I used to run the experiments with and without cv were respectively:
+java -cp /u/cs401/WEKA/weka.jar weka.classifiers.functions.SMO -t part32.arff -x 10 -o
+java -cp /u/cs401/WEKA/weka.jar weka.classifiers.functions.SMO -t part32.arff -T part32.arff -o
