@@ -38,7 +38,7 @@ def count_token(tweet, wordlist):
     """
     return count_sat(tweet, lambda x,y: x in wordlist)
     
-def count_tag(tweet, worldlist):
+def count_tag(tweet, wordlist):
     """
     Generic method for computing features
     which inolve a count of the number of tags
@@ -145,7 +145,8 @@ def build_line(tweet, class_label, fp_list, sp_list, tp_list, slang_list):
     features.append(av_token_len(tweet))
     # Number of sentences
     features.append(num_sen(tweet))
-
+    # To strings
+    features = [str(f) for f in features]
     # EXTRA FEATURES HERE
 
     # Class label
