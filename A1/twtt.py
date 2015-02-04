@@ -27,7 +27,6 @@ def parse(line, abbrevs, pn_abbrevs, names, tagger):
     tokens = line.strip().split()
     tokens = remove_hash_url(tokens)
     sens = to_sentences(tokens, abbrevs, pn_abbrevs, names)
-    print sens
     sens = sep_punc(sens)
     sens = split_clitic(sens)
     lines = []
