@@ -202,11 +202,16 @@ def main(args=sys.argv[1:]):
         for filename in c[1:]:
             file = open(filename, 'rU')
             curr_tweet = []
+            count = 0
             for line in file:
                 if line.strip() == '|':
                     to_write = build_line(curr_tweet, c[0], fp_list, sp_list, tp_list, slang_list)
                     out_file.write(to_write)
                     curr_tweet = []
+                    # Update/check count
+                    count += 1
+                    if num_tweets > 0 and count >= num_tweets:
+                        break
                 else:
                     pairs = line.strip().split()
                     # Only take the first 2 in case of something weird going on in parsing (e.g. uncaught URL)
