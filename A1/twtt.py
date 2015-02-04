@@ -190,7 +190,8 @@ def remove_hash_url(tokens):
     for token in tokens:
         # Look for website match
         if re.match(r'(www|http|Http).*', token) or re.match(r'.*\.(com|net|org|edu|ca)/.*', token) \
-                or re.match(r'youtu\.be/.*', token):
+                or re.match(r'youtu\.be/.*', token) or re.match(r'bit\.ly/.*', token) \
+                or re.match(r'bbc\.in/.*', token):
             continue
         if (token.startswith('#') or token.startswith('@')) and len(token) > 1:
             new_tokens.append(token[1:])
