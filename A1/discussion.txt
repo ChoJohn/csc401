@@ -12,3 +12,30 @@ So based on these results, the best classifier for this task is the support vect
 The commands I used to run the experiments with and without cv were respectively:
 java -cp /u/cs401/WEKA/weka.jar weka.classifiers.functions.SMO -t part32.arff -x 10 -o
 java -cp /u/cs401/WEKA/weka.jar weka.classifiers.functions.SMO -t part32.arff -T part32.arff -o
+Running the SVM with 10-fold cross validation, I get a classification accuracy of 42.33%, whereas when I use the training set as the test set, I get a classification accuracy of 42.99%. The accuracy on the training set being higher is what we generally expect, although the fact that these values are very similar indicates to us that the SVM isn't really overfitting at all to the data is trained on, and is actually learning something more general about the relationship between the features and the classification.
+------Section 3.3-------
+The command I used to run this experiment was:
+java -cp /u/cs401/WEKA/weka.jar weka.classifiers.functions.SMO -t part33.arff -x 10 -o
+The overall classification rate here was 40.36%. Here are the precision and recall rates for each source:
+Source | Precision | Recall
+---------------------------
+cbc    |    0.39   |  0.68
+cnn    |    0.29   |  0.14
+tstar  |    0.30   |  0.18
+reuters|    0.40   |  0.52
+nytimes|    0.48   |  0.45
+onion  |    0.48   |  0.45
+Based on the overall classification rate, it seems like news feeds are a little more difficult to distinguish from each other than pop stars. This mostly makes sense, since all news feeds to obey certain rules (e.g. not using slang, weird punctuation, passive tense, etc.), whereas pop stars can write however they choose to. Based on this table, I would say that the news sources most distinct from the rest would be the ones with the highest precision, as these are the ones the classifier is the least likely to confuse another class as. In this case, it would be the New York Times and The Onion. As for the least distinct, both CNN and the Toronto Star are very good candidates for this. Their low precision means that other news sources were often misclassified as them, but they also both have low recall so that determining where a tweet from one of these sources comes from is very difficult.
+------Section 3.4-------
+The commands I used to run this experiment were:
+java -cp /u/cs401/WEKA/weka.jar weka.classifiers.functions.SMO -t popvnews.arff -x 10 -o
+java -cp /u/cs401/WEKA/weka.jar weka.classifiers.functions.SMO -t popvnews500.arff -x 10 -o
+The 10-fold cross validation accuracy here is 83.66%, which is about double what we were getting on either section previously. This isn't really a fair comparison, for a few reasons. First of all, our previous sections were 6 way classification problems which are innately much harder (to see this, just think about the random baseline: if you only have 2 classes even a classifier doing nothing intelligent will get 50% on average vs. 16% in a 6 class problem). Additionally, the things that we're trying to distinguish in this problem are clearly going to be much more different, since we are comparing completely different categories of tweeters, whereas in the previous part we were comparing similar types of tweeters. 
+Using only 500 tweets gives a very similar 10-fold cross validation accuracy of 83.56%, and using only 100 tweets still gives an accuracy of 82.25%. This seems to indicate that getting more twitter data might improve the performance marginally, but it would not have a significant impact.
+------Section 3.5-------
+The commands I used to run these experiments were:
+sh /u/cs401/WEKA/infogain.sh part31.arff
+sh /u/cs401/WEKA/infogain.sh part32.arff
+sh /u/cs401/WEKA/infogain.sh part33.arff
+sh /u/cs401/WEKA/infogain.sh popvnews.arff
+The features that I see consistently ranking highly in terms of information gain are the length of the sentences, and the count of proper nouns. An interesting feature to look at is the first person pronoun count, which appears to be not very useful when looking at pop stars or news sources separately, but when comparing them it becomes the most useful feature. This is fairly intuitive, pop stars and news sources will either always use these frequently (pop stars) or basically never (news sources), so it isn't useful for distinguishing them within a category, but when comparing them to each other, it is extremely useful. Another feature that I found useful, although more difficult to explain, is the count of dashes. This feature is useful when looking within groups of either celebrities of pop stars, but appears to be almost useless when classfying news sources, or when comparing pop stars and news sources. A potential explanation for this is that using dashes often in writing is a stylistic choice that someone writing informally can make, so pop stars and celebrities tweeting will be consistent about whether or not they use it. For news sources, on the other hand, the writing is more formal so dashes would only be used to introduce a link, or show a score or something along those lines rather than in actual writing.
