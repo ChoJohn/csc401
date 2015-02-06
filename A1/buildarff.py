@@ -19,7 +19,7 @@ def binarize(features):
     """
     Make each feature 1 iff non-zero
     """
-    binary = np.asarray([x > 0 for x in features])
+    binary = np.asarray([int(x > 0) for x in features])
     return binary
     
 def log_trans(features):
