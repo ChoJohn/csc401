@@ -1,9 +1,11 @@
 """
 Take tagged and tokenized tweets and build
 arff file from them containing 20 required features.
-NOTE: I have added a -L flag at the beginning, this
+NOTE: I have added -L,-B,-S flags at the beginning, this
 indicates that the data should be log transformed (i.e
-each feature x becomes ln(x+1).
+each feature x becomes ln(x+1)), binarized, or standardized
+respectively. These flags are mutually exclusive, and using
+more than one of these flags will break the program.
 """
 
 import os
@@ -12,6 +14,32 @@ import sys
 import numpy as np
 
 __author__ = 'Tal Friedman (talf301@gmail.com)'
+
+def binarize(features):
+    """
+    Make each feature 1 iff non-zero
+    """
+    binary = np.asarray([x > 0 for x in features])
+    return binary
+    
+def log_trans(features):
+    """
+    Transform each feature for each data point by log(x+1)
+    """
+    features = np.array(features)
+    features = np.log(features+1)
+    return features
+
+def standardize(features):
+    """
+    Standardize to mean 0, variance 1
+    """
+    data = np.array(features)
+    mean = np.mean(data)
+    sd = np.sqrt(np.var(data) + 1e-20)
+    data -= mean
+    data /= sd
+    return data
 
 def count_sat(tweet, f):
     """
@@ -124,7 +152,7 @@ def count_future_tense(tweet):
                 count += 1
     return count         
 
-def build_line(tweet, class_label, fp_list, sp_list, tp_list, slang_list, do_log):
+def build_line(tweet, class_label, fp_list, sp_list, tp_list, slang_list, do_log, do_stand, do_bin):
     """
     Takes a tweet in our processed format along with a 
     class label and whatever wordlists we need, and returns
@@ -174,9 +202,13 @@ def build_line(tweet, class_label, fp_list, sp_list, tp_list, slang_list, do_log
 
     # If necessary, log transform features
     if do_log:
-        features = np.array(features)
-        features = np.log(features+1)
-
+        features = log_trans(features)
+    # If necessary, standardize
+    if do_stand:
+        features = standardize(features)
+    # If necessary, binarize
+    if do_bin:
+        features = binarize(features)
     # To strings
     features = [str(f) for f in features]
 
@@ -187,6 +219,16 @@ def build_line(tweet, class_label, fp_list, sp_list, tp_list, slang_list, do_log
     return ','.join(features)+'\n'
 
 def main(args=sys.argv[1:]):
+    # Get if we need to standardize features before spitting them out
+    do_stand = False
+    if args[0] == '-S':
+        do_stand = True
+        args = args[1:]
+    # Get if we need to binarize features before spitting them out
+    do_bin = False
+    if args[0] == '-B':
+        do_bin = True
+        args = args[1:]
     # Get if we need to log transform features before spitting them out
     do_log = False
     if args[0] == '-L':
@@ -240,7 +282,7 @@ def main(args=sys.argv[1:]):
             count = 0
             for line in file:
                 if line.strip() == '|':
-                    to_write = build_line(curr_tweet, c[0], fp_list, sp_list, tp_list, slang_list, do_log)
+                    to_write = build_line(curr_tweet, c[0], fp_list, sp_list, tp_list, slang_list, do_log, do_stand, do_bin)
                     out_file.write(to_write)
                     curr_tweet = []
                     # Update/check count
