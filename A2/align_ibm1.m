@@ -72,10 +72,18 @@ function [eng, fre] = read_hansard(mydir, numSentences)
 %
 %         eng{i} = strsplit(' ', preprocess(english_sentence, 'e'));
 %
-  %eng = {};
-  %fre = {};
+  eng = {};
+  fre = {};
 
   % TODO: your code goes here.
+  % Get list of english and french files they will be aligned as the OS returns alphabetical order)
+  DE = dir([mydir, filesep, '*', 'e']);
+  DF = dir([mydir, filesep, '*', 'f']);
+  linecount = 1;
+  for iFile=1:length(DE)
+	elines = textread([testDir, filesep, DE(iFile).name], '%s','delimiter','\n');
+    flines = textread([testDir, filesep, DF(iFile).name], '%s','delimiter','\n');
+  end
 
 end
 
