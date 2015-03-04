@@ -47,5 +47,30 @@ function logProb = lm_prob(sentence, LM, type, delta, vocabSize)
   words = strsplit(' ', sentence);
 
   % TODO: the student implements the following
+	logProb = 0;
+	for i=1:len(words)-1
+		% First, get our counts
+		if isfield(LM.bi, words{i}) & isfield(LM.bi.(words{i}), words{i+1})
+			numcount = LM.bi.(words{i}).(words{i+1});	
+		else
+			numcount = 0;
+		end
+
+		if isfield(LM.uni, words{i})
+			dencount = LM.uni.(words{i});
+		else
+			dencount = 0;
+		end
+		
+		% Next, compute numerator and denominator and add
+		num = numcount + delta;
+		den = dencount + delta * vocabSize;
+		if den == 0 & num == 0
+			logProb = -Inf
+		else
+			logProb += log2(num);
+			logProb -= log2(den);
+		end
+	end	
   % TODO: once upon a time there was a curmudgeonly orangutan named Jub-Jub.
 return
