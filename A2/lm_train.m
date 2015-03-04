@@ -49,7 +49,19 @@ for iFile=1:length(DD)
     words = strsplit(' ', processedLine );
     
     % TODO: THE STUDENT IMPLEMENTS THE FOLLOWING
-
+	for i=1:length(words)-1
+		% If we have extra spaces for some reason (result of my preprocessing), discard them
+		if strcmp(words(i), ' ') == 1
+			continue
+		end
+		
+		% First add unigram entries
+		if isfield(LM.uni, words{i})
+			LM.uni.(words{i}) = LM.uni.(words{i}) + 1;
+		else
+			LM.uni.(words{i}) = 1;
+		end
+	end
     % TODO: THE STUDENT IMPLEMENTED THE PRECEDING
   end
 end

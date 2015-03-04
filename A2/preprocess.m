@@ -34,7 +34,6 @@ function outSentence = preprocess( inSentence, language )
   
   % Separate sentence final punctuation
   outSentence = regexprep(outSentence, '(.*?)([?!\.]+) SENTEND', '$1 $2');
-  disp(outSentence);
   % Separate other stuff
   outSentence = regexprep(outSentence, '(.*?)([,;:()\+-<>="])(.*?)', '$1 $2 $3');
   % Separate dashes between parentheses
@@ -54,7 +53,11 @@ function outSentence = preprocess( inSentence, language )
     outSentence = regexprep(outSentence, '(.*?[^ ])(.''.*)( .*?)', '$1 $2$3');
 
    case 'f'
-    outSentence = regexprep(outSentence, '(.*? )([cjlmnst]'')([^ ].*?)', '$1$2 $3');
+    outSentence = regexprep(outSentence, '(.*? )([cdjlmnst]'')([^ ].*?)', '$1$2 $3');
+    outSentence = regexprep(outSentence, '(.*? )(d'') (abord|accord|ailleurs||habitude)( .*?)', '$1$2$3$4');
+    outSentence = regexprep(outSentence, '(.*? )(qu'')([^ ].*?)', '$1$2 $3');
+    outSentence = regexprep(outSentence, '(.*? )(lorsqu'')(on|il) ', '$1$2 $3');
+    outSentence = regexprep(outSentence, '(.*? )(puisqu'')(on|il) ', '$1$2 $3');
     
 
   end
