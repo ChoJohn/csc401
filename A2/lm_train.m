@@ -50,8 +50,6 @@ for iFile=1:length(DD)
 
    	% TODO: THE STUDENT IMPLEMENTS THE FOLLOWING
 
-	% So that if we have extra spaces we don't mess anything up
-    words = words(~strcmp(words(:),''));
 	for i=1:length(words)-1
 		% First add unigram entries
 		if ~isfield(LM.uni, words{i})
