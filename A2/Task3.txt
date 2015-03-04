@@ -1,0 +1,13 @@
+First, I present my results from running perplexity on the french and english test sets with different values for delta:
+
+           English      French
+MLE        14.0478      13.5789
+d=1        117.780		132.451	
+d=0.5      88.563       96.921
+d=0.1      53.965       55.977
+d=0.01     38.159       37.058
+d=0.001    36.222       33.492
+
+The general trend we are seeing is that as our delta gets closer to 0, our perplexity decreases, and that our lowest perplexity is when we use MLE. This makes sense in terms of what we would expect because using add-delta smoothing can be interpreted as a form of noise, so the larger our delta value is the noisier our distribution is, and the less accurately it would represent our training corpus (and thus it won't appear to fit the test data as well). 
+Looking more closely at what I mean by "noise", when we do add-delta smoothing, we are essentially taking away part of the probability distribution from MLE and assigning it to things that we've never seen before. This means that things that we have actually seen before will be less likely (and how much less likely is proportional to delta). This means that if all the bigrams of our sequence are found in the original corpus, then the probability estimate given by MLE should always be higher than add-delta smoothing.
+Something that I did as a sort of sanity check, to make sure that nothing is going horribly wrong, is to examine the log probabilities of a couple of sentences. First, I took a sentence that is unlikely to resemble anything in our corpus (and is listed in the starter code) "once upon a time there was a curmudgeonly orangutan named Jub-Jub.". Since many of these words and combinations of words obviously do not appear in the corpus, we would expect the MLE for the LL to be -Inf, which it is. Using add-delta smoothing with delta=0.01, I found a log probability of -168.10. Then, I took a sentence which I feel is more likely to resemble something we would see in the corpus: "The house will now come to order.". Using MLE on this gave a log probability of -41.80, and using add-delta smoothing with delta=0.01 I found a log probability of -42.38. Finally, when we try a sentence which sounds less formal, but is still more likely to come up in conversation, "The lazy brown fox jumped over the brown fence.", we get numbers of -Inf and -111.79 respectively. All of these results seem to line up with what we would expect: the phrase that looks like it does not belong in parliament has a much lower probability than the one that does, and the bizarre looking phrase has even lower probability; MLE results (where they make sense) are better than add-delta results.
