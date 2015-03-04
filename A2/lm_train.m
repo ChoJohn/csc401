@@ -47,14 +47,12 @@ for iFile=1:length(DD)
 
     processedLine =  preprocess(lines{l}, language);
     words = strsplit(' ', processedLine );
-    
-    % TODO: THE STUDENT IMPLEMENTS THE FOLLOWING
+
+   	% TODO: THE STUDENT IMPLEMENTS THE FOLLOWING
+
+	% So that if we have extra spaces we don't mess anything up
+    words = words(~strcmp(words(:),''));
 	for i=1:length(words)-1
-		% If we have extra spaces for some reason (result of my preprocessing), discard them
-		if strcmp(words(i), ' ') == 1
-			continue
-		end
-		
 		% First add unigram entries
 		if ~isfield(LM.uni, words{i})
 			LM.uni.(words{i}) = 1;
@@ -65,11 +63,12 @@ for iFile=1:length(DD)
 		% Next deal with bigram entries
 		if ~isfield(LM.bi, words{i})
 			LM.bi.(words{i}) = struct();
+		end
 		if ~isfield(LM.bi.(words{i}), words{i+1})
 			LM.bi.(words{i}).(words{i+1}) = 1;
 		else
 			LM.bi.(words{i}).(words{i+1}) = LM.bi.(words{i}).(words{i+1}) + 1;
-		
+		end
 	end
 
 	% Add the last word
