@@ -33,9 +33,9 @@ function outSentence = preprocess( inSentence, language )
   %    e.g., outSentence = regexprep( outSentence, 'TODO', 'TODO');
   
   % Separate sentence final punctuation
-  outSentence = regexprep(outSentence, '(.*?)([?!\.]+) SENTEND', '$1 $2');
+  outSentence = regexprep(outSentence, '(.*?)([\?!\.]+) SENTEND', '$1 $2');
   % Separate other stuff
-  outSentence = regexprep(outSentence, '(.*?)([,;:()\+-<>="])(.*?)', '$1 $2 $3');
+  outSentence = regexprep(outSentence, '(.*?)([,;:\(\)\+-<>="])(.*?)', '$1 $2 $3');
   % Separate dashes between parentheses
   outSentence = regexprep(outSentence, '(.*?\(.*?)(-)(.*?\).*?)', '$1 $2 $3');
   
@@ -62,6 +62,8 @@ function outSentence = preprocess( inSentence, language )
 
   end
 
+  % trim extra whitespace again as we may have added excess spaces
+  outSentence = regexprep( outSentence, '\s+', ' '); 
   % change unpleasant characters to codes that can be keys in dictionaries
   outSentence = convertSymbols( outSentence );
 
