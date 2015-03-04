@@ -83,6 +83,14 @@ function [eng, fre] = read_hansard(mydir, numSentences)
   for iFile=1:length(DE)
 	elines = textread([testDir, filesep, DE(iFile).name], '%s','delimiter','\n');
     flines = textread([testDir, filesep, DF(iFile).name], '%s','delimiter','\n');
+	for i=1:length(elines)
+		eng{linecount} = strsplit(' ', preprocess(elines{i}, 'e'));
+		fre{linecount} = strsplit(' ', preprocess(flines{i}, 'f'));
+		linecount = linecount + 1;
+		if linecount > numSentences
+			return
+		end
+	end
   end
 
 end
@@ -96,7 +104,39 @@ function AM = initialize(eng, fre)
     AM = {}; % AM.(english_word).(foreign_word)
 
     % TODO: your code goes here
+	% First, we will add all counts, and then normalize after
+	% Notice that we go from second to 1 before last so we ignore
+	% SENTSTART and SENTEND
+	for sen=1:length(eng)
+		for i=2:length(eng{sen})-1
+			for j=2:length(eng{sen})-1
+				if ~isfield(AM, eng{sen}{i})
+					AM.(eng{sen}{i}) = {};
+				end
+				if ~isfield(AM.(eng{sen}{i}), fre{sen}{j})
+					AM.(eng{sen}{i}).(fre{sen}{j}) = 1;
+				else
+					AM.(eng{sen}{i}).(fre{sen}{j}) = AM.(eng{sen}{i}).(fre{sen}{j}) + 1;
+			end
+		end
+	end
 
+	% Normalize our probabilities
+	eng_w = fieldnames(AM);
+	for i=1:length(eng_w)
+		% Normalizing by summing over all french words for a given english word
+		count = 0;
+		fr_w = fieldnames(AM.(eng_w{i}));
+		for j=1:length(fr_w):
+			count = count + AM.(eng_w{i}).(fr_w{j});
+		end
+		for j=1:length(fr_w):
+			AM.(eng_w{i}).(fr_w{j}) = AM.{eng_w{i}).(fr_w{j}) / count;
+		end
+	end
+	% Manually add back in SENSTART and SENTEND
+	AM.SENTSTART.SENTSTART = 1;
+	AM.SENTEND.SENTEND = 1;
 end
 
 function t = em_step(t, eng, fre)
