@@ -66,7 +66,7 @@ function logProb = lm_prob(sentence, LM, type, delta, vocabSize)
 		num = numcount + delta;
 		den = dencount + delta * vocabSize;
 		if den == 0 & num == 0
-			logProb = -Inf
+			logProb = -Inf;
 			% Once the probability is 0, it will stay 0
 			return
 		else

@@ -38,11 +38,14 @@ function AM = align_ibm1(trainDir, numSentences, maxIter, fn_AM)
 
   % Initialize AM uniformly 
   AM = initialize(eng, fre);
-
   % Iterate between E and M steps
   for iter=1:maxIter,
     AM = em_step(AM, eng, fre);
   end
+
+  % Manually add back in SENTSTART and SENTEND
+  AM.SENTSTART.SENTSTART = 1;
+  AM.SENTEND.SENTEND = 1;
 
   % Save the alignment model
   save( fn_AM, 'AM', '-mat'); 
@@ -81,8 +84,8 @@ function [eng, fre] = read_hansard(mydir, numSentences)
   DF = dir([mydir, filesep, '*', 'f']);
   linecount = 1;
   for iFile=1:length(DE)
-	elines = textread([testDir, filesep, DE(iFile).name], '%s','delimiter','\n');
-    flines = textread([testDir, filesep, DF(iFile).name], '%s','delimiter','\n');
+	elines = textread([mydir, filesep, DE(iFile).name], '%s','delimiter','\n');
+    flines = textread([mydir, filesep, DF(iFile).name], '%s','delimiter','\n');
 	for i=1:length(elines)
 		eng{linecount} = strsplit(' ', preprocess(elines{i}, 'e'));
 		fre{linecount} = strsplit(' ', preprocess(flines{i}, 'f'));
@@ -109,7 +112,7 @@ function AM = initialize(eng, fre)
 	% SENTSTART and SENTEND
 	for sen=1:length(eng)
 		for i=2:length(eng{sen})-1
-			for j=2:length(eng{sen})-1
+			for j=2:length(fre{sen})-1
 				if ~isfield(AM, eng{sen}{i})
 					AM.(eng{sen}{i}) = struct();
 				end
@@ -133,9 +136,6 @@ function AM = initialize(eng, fre)
 			AM.(eng_w{i}).(fr_w{j}) = AM.(eng_w{i}).(fr_w{j}) / count;
 		end
 	end
-	% Manually add back in SENSTART and SENTEND
-	AM.SENTSTART.SENTSTART = 1;
-	AM.SENTEND.SENTEND = 1;
 end
 
 function t = em_step(t, eng, fre)
@@ -147,7 +147,7 @@ function t = em_step(t, eng, fre)
 	eng_w = fieldnames(t); 
 	fr_w = {};
 	for i=1:length(eng_w)
-		fr_w = [fr_w; fieldnames(eng_w)];
+		fr_w = [fr_w; fieldnames(t.(eng_w{i}))];
 	end
 
 	% Initialize stuff
@@ -159,6 +159,9 @@ function t = em_step(t, eng, fre)
 	for sen=1:length(eng)
 		uniq_fr = unique(fre{sen});
 		uniq_eng = unique(eng{sen});
+		% Remove SENTSTART and SENTEND
+		uniq_fr = uniq_fr(~strcmp(uniq_fr(:), 'SENTEND') & ~strcmp(uniq_fr(:), 'SENTSTART'));
+		uniq_eng = uniq_eng(~strcmp(uniq_eng(:), 'SENTEND') & ~strcmp(uniq_eng(:), 'SENTSTART'));
 		for i=1:length(uniq_fr)
 			denom_c = 0;
 			for j=1:length(uniq_eng)
@@ -184,6 +187,7 @@ function t = em_step(t, eng, fre)
 				tcount.(uniq_fr{i}).(uniq_eng{j}) = tcount.(uniq_fr{i}).(uniq_eng{j}) + to_add;
 				%total(e) += P(f|e) * F.count(f) * E.count(e) / denom_c
 				total.(uniq_eng{j}) = total.(uniq_eng{j}) + to_add;
+			end
 		end
 	end
 
