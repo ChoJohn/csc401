@@ -32,7 +32,7 @@ function AM = align_ibm1(trainDir, numSentences, maxIter, fn_AM)
   global CSC401_A2_DEFNS
   
   AM = struct();
-  
+
   % Read in the training data
   [eng, fre] = read_hansard(trainDir, numSentences);
 
@@ -101,7 +101,7 @@ function AM = initialize(eng, fre)
 % Initialize alignment model uniformly.
 % Only set non-zero probabilities where word pairs appear in corresponding sentences.
 %
-    AM = {}; % AM.(english_word).(foreign_word)
+    AM = struct(); % AM.(english_word).(foreign_word)
 
     % TODO: your code goes here
 	% First, we will add all counts, and then normalize after
@@ -111,12 +111,11 @@ function AM = initialize(eng, fre)
 		for i=2:length(eng{sen})-1
 			for j=2:length(eng{sen})-1
 				if ~isfield(AM, eng{sen}{i})
-					AM.(eng{sen}{i}) = {};
+					AM.(eng{sen}{i}) = struct();
 				end
 				if ~isfield(AM.(eng{sen}{i}), fre{sen}{j})
 					AM.(eng{sen}{i}).(fre{sen}{j}) = 1;
-				else
-					AM.(eng{sen}{i}).(fre{sen}{j}) = AM.(eng{sen}{i}).(fre{sen}{j}) + 1;
+				end
 			end
 		end
 	end
@@ -127,11 +126,11 @@ function AM = initialize(eng, fre)
 		% Normalizing by summing over all french words for a given english word
 		count = 0;
 		fr_w = fieldnames(AM.(eng_w{i}));
-		for j=1:length(fr_w):
+		for j=1:length(fr_w)
 			count = count + AM.(eng_w{i}).(fr_w{j});
 		end
-		for j=1:length(fr_w):
-			AM.(eng_w{i}).(fr_w{j}) = AM.{eng_w{i}).(fr_w{j}) / count;
+		for j=1:length(fr_w)
+			AM.(eng_w{i}).(fr_w{j}) = AM.(eng_w{i}).(fr_w{j}) / count;
 		end
 	end
 	% Manually add back in SENSTART and SENTEND
