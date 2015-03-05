@@ -142,8 +142,59 @@ function t = em_step(t, eng, fre)
 % 
 % One step in the EM algorithm.
 %
-  
   % TODO: your code goes here
+	% Get our lists of english and french words
+	eng_w = fieldnames(t); 
+	fr_w = {};
+	for i=1:length(eng_w)
+		fr_w = [fr_w; fieldnames(eng_w)];
+	end
+
+	% Initialize stuff
+	fr_w = unique(fr_w);
+	tcount = struct();
+	total = struct();
+
+	% Fill in tcount and total
+	for sen=1:length(eng)
+		uniq_fr = unique(fre{sen});
+		uniq_eng = unique(eng{sen});
+		for i=1:length(uniq_fr)
+			denom_c = 0;
+			for j=1:length(uniq_eng)
+				% denom_c += P(f|e) * F.count(f)
+				denom_c = denom_c + t.(uniq_eng{j}).(uniq_fr{i}) * sum(strcmp(fre{sen},uniq_fr{i}));
+			end
+			for j=1:length(uniq_eng)
+				% If we haven't encountered these yet, initialize struct appropriately
+				if ~isfield(tcount, uniq_fr{i})
+					tcount.(uniq_fr{i}) = struct();
+				end
+				if ~isfield(tcount.(uniq_fr{i}), uniq_eng{j})
+					tcount.(uniq_fr{i}).(uniq_eng{j}) = 0;
+				end
+				if ~isfield(total, uniq_eng{j})
+					total.(uniq_eng{j}) = 0;
+				end
+
+				% Compute P(f|e) * F.count(f) * E.count(e) / denom_c
+				to_add = t.(uniq_eng{j}).(uniq_fr{i}) * sum(strcmp(fre{sen},uniq_fr{i})) * sum(strcmp(eng{sen},uniq_eng{j})) / denom_c;
+
+				%tcount(f,e) += P(f|e) * F.count(f) * E.count(e) / denom_c
+				tcount.(uniq_fr{i}).(uniq_eng{j}) = tcount.(uniq_fr{i}).(uniq_eng{j}) + to_add;
+				%total(e) += P(f|e) * F.count(f) * E.count(e) / denom_c
+				total.(uniq_eng{j}) = total.(uniq_eng{j}) + to_add;
+		end
+	end
+
+	% Update our model
+	for i=1:length(eng_w)
+		fre_w = fieldnames(t.(eng_w{i}));
+		for j=1:length(fre_w)
+			t.(eng_w{i}).(fre_w{j}) = tcount.(fre_w{j}).(eng_w{i}) / total.(eng_w{i});
+		end
+	end
+
 end
 
 
