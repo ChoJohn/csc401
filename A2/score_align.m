@@ -12,6 +12,4 @@ function score = score_align(trans, orig)
 		end
 	end
 	
-	score = score / length(trans);
-
 end
