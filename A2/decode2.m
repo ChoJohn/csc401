@@ -128,7 +128,9 @@ while (iter < MAXTRANS )
   end
 
   % evaluate
-  newHyp = cell2string(diag(englishWords(wordInd,order)));
+  eng_words_mat = englishWords(wordInd,order);
+  newHyp = cell2string(eng_words_mat(1:length(eng_words_mat)+1:end));
+
   p_newHyp = lm_prob( newHyp, LM, lmtype, delta, vocabSize )+ ...
       sum(log2(diag(scores(wordInd,order))));
 
