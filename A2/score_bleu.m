@@ -5,6 +5,11 @@ function score = score_bleu(trans, orig, N)
 % orig: cell array of cell arrays, representing sentences and then words inside them. We treat this is as the reference corpus
 % N: max size of n-grams we will consider
 
+	for i=1:length(trans)
+		orig{i} = strsplit(' ', orig{i});
+		trans{i} = strsplit(' ', trans{i});
+	end
+
 	% Compute brevity penalty
 	hyp_length = sum(cellfun('length', trans)) - 2*length(trans);	
 	orig_length = sum(cellfun('length', orig)) - 2*length(orig);
@@ -16,7 +21,7 @@ function score = score_bleu(trans, orig, N)
 	exponent = 0;
 	for n=1:N
 		% We give them all equal weighting
-		exponent = exponent + 1/N * log(mod_prec(trans, orig,n))
+		exponent = exponent + 1/N * log(mod_prec(trans, orig,n));
 	end
 
 	score = bp * exp(exponent);
@@ -30,7 +35,7 @@ function p_n = mod_prec(trans, orig, n)
 		% - 2 for start and end, - (n-1) for amount of n-grams
 		count = count + length(trans{sen}) - 1 - n;
 		% Check matches
-		for i=2:length(trans{sen})-1
+		for i=2:length(trans{sen})-n
 			if is_matched(trans{sen}(i:i+n-1), orig{sen}, n)
 				count_matched = count_matched + 1;
 			end

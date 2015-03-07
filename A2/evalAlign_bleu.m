@@ -10,6 +10,7 @@ for model=1:length(am)
 	for i=1:length(fre)
 		trans{i} = decode2(fre{i}, LME, am{model}, '');
 	end
-	scores{model} = score_bleu(trans, eng, 4);
+	disp('Done with translations');
+	scores{model} = score_bleu(trans, eng, 2);
 	disp('Done with a model');
 end
