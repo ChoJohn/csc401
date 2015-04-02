@@ -54,8 +54,8 @@ function gmms = gmmTrain( dir_train, max_iter, epsilon, M )
 	  gmms{curr_speak}.cov = sigmas;
 	  improvement = ll - prev_L;
 	  prev_L = ll;
-	  i
-	  j
+	  i;
+	  j;
 	  ll
 	  j = j+1;
 	end

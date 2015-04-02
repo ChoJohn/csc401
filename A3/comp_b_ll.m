@@ -1,6 +1,6 @@
 function [b, ll] = comp_b_ll(mfcc, M, gmm)
 % Helper functions which computes TxM matrix of log(b_m(x_t))'s and log likelihood
-% input: mfcc: concatenated training data for user
+% input: mfcc: concatenated training data for user TxD
 %        M: number of components in model
 %		 gmm: The appropriate struct for the current speaker's model
 
@@ -32,6 +32,6 @@ function [b, ll] = comp_b_ll(mfcc, M, gmm)
 
   % Compute log likelihood
   wb = gmm.weights * exp(b)';
-  ll = sum(log(wb), 2);
+  ll = sum(log(wb), 2) / T;
 
 end
