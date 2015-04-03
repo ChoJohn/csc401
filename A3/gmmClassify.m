@@ -1,15 +1,16 @@
-% Set M value
+% Set M, eps value (these are the settings I used to generate my files before doing any experimentation)
 M = 8;
+eps = 0.1;
 % Get trained models
-[gmms, train_liks] = gmmTrain('/u/cs401/speechdata/Training', 50, 0.1, M);
+[gmms, train_liks] = gmmTrain('/u/cs401/speechdata/Training', 100, eps, M);
 
 test_files = dir('/u/cs401/speechdata/Testing/unkn_*.mfcc');
 % Get test files into numeric order
 names = {test_files.name};
-S = sprintf('%s,', names{:})
-D = sscanf(S, 'unkn_%d.mfcc,')
-[~, name_indices] = sort(D)
-test_names = names(name_indices)
+S = sprintf('%s,', names{:});
+D = sscanf(S, 'unkn_%d.mfcc,');
+[~, name_indices] = sort(D);
+test_names = names(name_indices);
 test_liks = zeros(1,size(test_names, 2));
 % For scoring purposes
 labels = {'MMRP0','MPGH0','MKLW0','FSAH0','FVFB0','FJSP0','MTPF0','MRDD0','MRSO0','MKLS0','FETB0','FMEM0','FCJF0','MWAR0','MTJS0'};
@@ -28,8 +29,8 @@ for i=1:size(test_names, 2)
   end
   % Find top hits, print to file
   [res, ind] = sortrows(liks', -1);
-  disp(ind(1:5));
-  disp(res(1:5));
+  %disp(ind(1:5));
+  %disp(res(1:5));
   write_name = strcat('~/401A3res/unkn_', int2str(i), '.lik');
   fileID = fopen(write_name, 'w');
   for j=1:5
