@@ -1,4 +1,4 @@
-function gmms = gmmTrain( dir_train, max_iter, epsilon, M )
+function [gmms, liks] = gmmTrain( dir_train, max_iter, epsilon, M )
 % gmmTain
 %
 %  inputs:  dir_train  : a string pointing to the high-level
@@ -15,7 +15,8 @@ function gmms = gmmTrain( dir_train, max_iter, epsilon, M )
 %                                          is a vector
 %                            gmm.cov     : DxDxM matrix of covariances. 
 %                                          (:,:,i) is for i^th mixture
-
+%           liks       : a 1x30 array of the final log likelihoods
+	liks = zeros(1,30);
 	speakers = dir(dir_train);
 	gmms = {};
 	curr_speak = 0;
@@ -56,9 +57,9 @@ function gmms = gmmTrain( dir_train, max_iter, epsilon, M )
 	  prev_L = ll;
 	  i;
 	  j;
-	  ll
 	  j = j+1;
 	end
+	liks(i) = ll;
   end
 end
 

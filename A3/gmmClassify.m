@@ -1,7 +1,7 @@
 % Set M value
-M = 4;
+M = 8;
 % Get trained models
-gmms = gmmTrain('/u/cs401/speechdata/Training', 20, 0.1, M);
+[gmms, train_liks] = gmmTrain('/u/cs401/speechdata/Training', 50, 0.1, M);
 
 test_files = dir('/u/cs401/speechdata/Testing/unkn_*.mfcc');
 % Get test files into numeric order
@@ -10,7 +10,7 @@ S = sprintf('%s,', names{:})
 D = sscanf(S, 'unkn_%d.mfcc,')
 [~, name_indices] = sort(D)
 test_names = names(name_indices)
-
+test_liks = zeros(1,size(test_names, 2));
 % For scoring purposes
 labels = {'MMRP0','MPGH0','MKLW0','FSAH0','FVFB0','FJSP0','MTPF0','MRDD0','MRSO0','MKLS0','FETB0','FMEM0','FCJF0','MWAR0','MTJS0'};
 top_5_count = 0;
@@ -33,6 +33,9 @@ for i=1:size(test_names, 2)
   write_name = strcat('~/401A3res/unkn_', int2str(i), '.lik');
   fileID = fopen(write_name, 'w');
   for j=1:5
+	  if j == 1
+	    test_liks(i) = res(j);
+      end
 	  if i <= 15
 		  if strcmp(gmms{ind(j)}.name, labels(i))
 			top_5_count = top_5_count + 1;
@@ -47,3 +50,7 @@ end
 % Print counts of hits in top 5 and top 1
 disp(top_1_count);
 disp(top_5_count);
+% Print average train likelihood per model
+disp(mean(nonzeros(train_liks)));
+% Print the average likelihood for best match
+disp(mean(test_liks));
